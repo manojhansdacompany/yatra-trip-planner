@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yatra — AI India Trip Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --saffron: #E8601C;
+    --turmeric: #F4A220;
+    --deep-teal: #0D3D3E;
+    --sage: #6B8F71;
+    --cream: #FAF6EF;
+    --ochre: #C4882F;
+    --night: #0A1A1B;
+    --muted: #8A8070;
+    --border: rgba(196,136,47,0.2);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--night); overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    opacity: 0.4;
+  }
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 48px; backdrop-filter: blur(12px);
+    background: rgba(250,246,239,0.85); border-bottom: 1px solid var(--border);
+  }
+  .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 600; color: var(--night); }
+  .logo span { color: var(--saffron); font-style: italic; }
+  .nav-links { display: flex; gap: 32px; align-items: center; }
+  .nav-links a { font-size: 0.85rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--saffron); }
+  .btn-nav { padding: 10px 24px; background: var(--saffron); color: white; border: none; border-radius: 100px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: background 0.2s, transform 0.15s; }
+  .btn-nav:hover { background: #c94e10; transform: translateY(-1px); }
+
+  /* HERO */
+  .hero { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; padding-top: 88px; position: relative; overflow: hidden; }
+  .hero-left { display: flex; flex-direction: column; justify-content: center; padding: 80px 64px 80px 80px; position: relative; z-index: 2; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(232,96,28,0.1); border: 1px solid rgba(232,96,28,0.25); border-radius: 100px; padding: 6px 16px; font-size: 0.75rem; font-weight: 500; color: var(--saffron); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 32px; width: fit-content; animation: fadeUp 0.6s ease both; }
+  .hero-badge::before { content: '✦'; font-size: 0.6rem; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(3.2rem, 5vw, 5.5rem); font-weight: 300; line-height: 1.08; letter-spacing: -0.02em; color: var(--night); margin-bottom: 24px; animation: fadeUp 0.6s 0.1s ease both; }
+  h1 em { color: var(--saffron); font-style: italic; }
+  h1 strong { font-weight: 600; }
+  .hero-sub { font-size: 1.05rem; font-weight: 300; color: var(--muted); line-height: 1.7; max-width: 420px; margin-bottom: 48px; animation: fadeUp 0.6s 0.2s ease both; }
+  .hero-stats { display: flex; gap: 40px; animation: fadeUp 0.6s 0.3s ease both; }
+  .stat-item { display: flex; flex-direction: column; gap: 4px; }
+  .stat-num { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 600; color: var(--night); line-height: 1; }
+  .stat-label { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
+  .hero-right { position: relative; overflow: hidden; }
+  .hero-right::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to right, var(--cream) 0%, transparent 30%), url('https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=900&q=80') center/cover no-repeat; z-index: 1; }
+  .hero-right::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 60%, var(--cream) 100%); z-index: 2; }
+  .float-card { position: absolute; bottom: 12%; right: 8%; z-index: 10; background: white; border-radius: 16px; padding: 20px 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.12); min-width: 220px; animation: floatBob 4s ease-in-out infinite; }
+  .float-card-title { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .float-card-dest { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 600; color: var(--night); margin-bottom: 4px; }
+  .float-card-meta { font-size: 0.8rem; color: var(--sage); display: flex; align-items: center; gap: 6px; }
+  .float-card-meta::before { content: '📍'; font-size: 0.75rem; }
+  .float-card-2 { position: absolute; top: 22%; right: 6%; z-index: 10; background: var(--deep-teal); color: white; border-radius: 12px; padding: 14px 18px; box-shadow: 0 12px 40px rgba(0,0,0,0.2); animation: floatBob 3.5s 1s ease-in-out infinite; }
+  .float-card-2 .fc2-label { font-size: 0.7rem; opacity: 0.6; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+  .float-card-2 .fc2-val { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 600; }
+  .fc2-dots { display: flex; gap: 4px; margin-top: 8px; }
+  .fc2-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3); }
+  .fc2-dot.active { background: var(--turmeric); }
+
+  /* PLANNER */
+  .planner { background: var(--night); position: relative; padding: 100px 80px; overflow: hidden; }
+  .planner::before { content: ''; position: absolute; top: -80px; left: 50%; transform: translateX(-50%); width: 600px; height: 600px; background: radial-gradient(circle, rgba(232,96,28,0.12) 0%, transparent 70%); pointer-events: none; }
+  .section-label { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--saffron); margin-bottom: 16px; }
+  .planner h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(2.4rem, 4vw, 3.8rem); font-weight: 300; color: var(--cream); line-height: 1.12; margin-bottom: 60px; }
+  .planner h2 em { font-style: italic; color: var(--turmeric); }
+  .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 24px; }
+  .form-group { display: flex; flex-direction: column; gap: 10px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label { font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(250,246,239,0.4); }
+  .form-input, .form-select, .form-textarea { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 14px 18px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--cream); transition: border-color 0.2s, background 0.2s; outline: none; width: 100%; }
+  .form-input::placeholder { color: rgba(250,246,239,0.3); }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--saffron); background: rgba(255,255,255,0.09); }
+  .form-select { cursor: pointer; appearance: none; }
+  .form-select option { background: var(--night); color: var(--cream); }
+  .form-textarea { resize: none; height: 100px; }
+  .chips-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip { padding: 8px 18px; border-radius: 100px; border: 1px solid rgba(255,255,255,0.15); background: transparent; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; color: rgba(250,246,239,0.55); cursor: pointer; transition: all 0.2s; user-select: none; }
+  .chip:hover { border-color: var(--turmeric); color: var(--turmeric); }
+  .chip.active { background: var(--saffron); border-color: var(--saffron); color: white; font-weight: 500; }
+  .btn-generate { margin-top: 40px; width: 100%; padding: 20px; background: linear-gradient(135deg, var(--saffron), var(--turmeric)); border: none; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 500; color: white; cursor: pointer; letter-spacing: 0.04em; position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
+  .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(232,96,28,0.4); }
+  .btn-generate:active { transform: translateY(0); }
+
+  /* RESULT */
+  .result-section { padding: 80px; background: var(--cream); display: none; }
+  .result-section.visible { display: block; }
+  .result-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px; padding-bottom: 24px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 16px; }
+  .result-header h2 { font-family: 'Cormorant Garamond', serif; font-size: 2.8rem; font-weight: 300; line-height: 1.1; }
+  .result-header h2 em { font-style: italic; color: var(--saffron); }
+  .result-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+  .meta-pill { padding: 8px 16px; background: white; border: 1px solid var(--border); border-radius: 100px; font-size: 0.8rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .meta-pill span { color: var(--night); font-weight: 500; }
+  .itinerary-grid { display: flex; flex-direction: column; gap: 32px; }
+  .day-card { background: white; border-radius: 20px; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 2px 20px rgba(0,0,0,0.04); transition: box-shadow 0.2s; }
+  .day-card:hover { box-shadow: 0 8px 40px rgba(0,0,0,0.08); }
+  .day-header { display: flex; align-items: center; gap: 20px; padding: 24px 32px; background: linear-gradient(to right, rgba(232,96,28,0.05), transparent); border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer; }
+  .day-num { width: 48px; height: 48px; background: var(--saffron); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 600; color: white; flex-shrink: 0; }
+  .day-title { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 600; }
+  .day-subtitle { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+  .day-toggle { margin-left: auto; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; transition: transform 0.3s; }
+  .day-card.open .day-toggle { transform: rotate(180deg); }
+  .day-body { padding: 0 32px; max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s; }
+  .day-card.open .day-body { max-height: 1200px; padding: 28px 32px; }
+  .activity-list { display: flex; flex-direction: column; gap: 20px; }
+  .activity-item { display: flex; gap: 16px; align-items: flex-start; padding-bottom: 20px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+  .activity-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .activity-time { font-size: 0.75rem; font-weight: 500; color: var(--saffron); background: rgba(232,96,28,0.08); padding: 4px 10px; border-radius: 6px; white-space: nowrap; min-width: 75px; text-align: center; margin-top: 2px; }
+  .activity-content { flex: 1; }
+  .activity-name { font-size: 0.95rem; font-weight: 500; color: var(--night); margin-bottom: 4px; }
+  .activity-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+  .activity-tag { display: inline-block; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; margin-top: 6px; }
+  .tag-culture { background: rgba(107,143,113,0.1); color: var(--sage); }
+  .tag-food { background: rgba(244,162,32,0.1); color: var(--ochre); }
+  .tag-adventure { background: rgba(232,96,28,0.1); color: var(--saffron); }
+  .tag-spiritual { background: rgba(13,61,62,0.1); color: var(--deep-teal); }
+  .tag-beach { background: rgba(0,150,200,0.1); color: #0096C8; }
+  .tag-wellness { background: rgba(107,143,113,0.15); color: var(--sage); }
+
+  /* ── PROMO SECTION ── */
+  .promos {
+    background: var(--night); padding: 80px;
+    position: relative; overflow: hidden;
+  }
+  .promos::before {
+    content: ''; position: absolute; bottom: -100px; right: -100px;
+    width: 500px; height: 500px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(244,162,32,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .promos h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem,3vw,3rem); font-weight: 300; color: var(--cream); margin-bottom: 48px; line-height: 1.1; }
+  .promos h2 em { font-style: italic; color: var(--turmeric); }
+  .promo-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+  .promo-card {
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px; padding: 32px;
+    position: relative; overflow: hidden;
+    background: rgba(255,255,255,0.04);
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .promo-card:hover { border-color: var(--turmeric); transform: translateY(-4px); }
+  .promo-badge {
+    display: inline-block; font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 100px; margin-bottom: 20px;
+  }
+  .badge-hot { background: rgba(232,96,28,0.2); color: var(--saffron); }
+  .badge-new { background: rgba(107,143,113,0.2); color: var(--sage); }
+  .badge-flash { background: rgba(244,162,32,0.2); color: var(--turmeric); }
+  .promo-dest { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 600; color: var(--cream); margin-bottom: 6px; }
+  .promo-desc { font-size: 0.82rem; color: rgba(250,246,239,0.45); line-height: 1.6; margin-bottom: 24px; }
+  .promo-discount { font-family: 'Cormorant Garamond', serif; font-size: 2.8rem; font-weight: 600; color: var(--turmeric); line-height: 1; margin-bottom: 4px; }
+  .promo-discount-label { font-size: 0.75rem; color: rgba(250,246,239,0.4); margin-bottom: 24px; }
+  .promo-code-box {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(255,255,255,0.06);
+    border: 1px dashed rgba(244,162,32,0.4);
+    border-radius: 10px; padding: 12px 16px; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .promo-code-box:hover { background: rgba(244,162,32,0.08); }
+  .promo-code-text { font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 500; color: var(--turmeric); letter-spacing: 0.12em; }
+  .promo-copy-btn { font-size: 0.72rem; color: rgba(250,246,239,0.4); padding: 4px 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; background: transparent; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+  .promo-copy-btn:hover { background: var(--saffron); border-color: var(--saffron); color: white; }
+  .promo-copy-btn.copied { background: var(--sage); border-color: var(--sage); color: white; }
+  .promo-validity { font-size: 0.72rem; color: rgba(250,246,239,0.3); margin-top: 12px; }
+  .promo-ribbon {
+    position: absolute; top: 20px; right: -28px;
+    background: var(--saffron); color: white;
+    font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em;
+    padding: 4px 36px; transform: rotate(45deg);
+  }
+
+  /* DESTINATIONS */
+  .destinations { padding: 100px 80px; background: white; }
+  .dest-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px; }
+  .dest-header h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem,3vw,3rem); font-weight: 300; line-height: 1.1; }
+  .dest-header h2 em { font-style: italic; color: var(--saffron); }
+  .dest-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; }
+  .dest-card { border-radius: 16px; overflow: hidden; position: relative; cursor: pointer; aspect-ratio: 3/4; transition: transform 0.3s; }
+  .dest-card:first-child { grid-row: span 2; aspect-ratio: auto; }
+  .dest-card:hover { transform: scale(1.02); }
+  .dest-img { position: absolute; inset: 0; background-size: cover; background-position: center; transition: transform 0.5s; }
+  .dest-card:hover .dest-img { transform: scale(1.06); }
+  .dest-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,26,27,0.85) 0%, transparent 50%); z-index: 1; }
+  .dest-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; z-index: 2; color: white; }
+  .dest-name { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 600; }
+  .dest-state { font-size: 0.75rem; opacity: 0.65; margin-top: 2px; }
+
+  /* HOW */
+  .how { padding: 100px 80px; background: var(--cream); }
+  .how h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem,3vw,3rem); font-weight: 300; text-align: center; margin-bottom: 64px; }
+  .how h2 em { font-style: italic; color: var(--saffron); }
+  .steps-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 32px; position: relative; }
+  .steps-grid::before { content: ''; position: absolute; top: 28px; left: 10%; right: 10%; height: 1px; background: linear-gradient(to right, transparent, var(--border), var(--border), transparent); }
+  .step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; }
+  .step-num { width: 56px; height: 56px; border-radius: 50%; background: white; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 600; color: var(--saffron); position: relative; z-index: 1; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+  .step-icon { font-size: 1.5rem; }
+  .step-title { font-weight: 500; font-size: 0.95rem; }
+  .step-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+  /* FOOTER */
+  footer { background: var(--night); padding: 60px 80px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); }
+  .footer-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 600; color: var(--cream); }
+  .footer-logo span { color: var(--saffron); font-style: italic; }
+  footer p { font-size: 0.8rem; color: rgba(250,246,239,0.35); }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { font-size: 0.8rem; color: rgba(250,246,239,0.4); text-decoration: none; }
+  .footer-links a:hover { color: var(--saffron); }
+
+  /* LOADER */
+  .loader-overlay { position: fixed; inset: 0; z-index: 999; background: var(--night); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  .loader-overlay.active { opacity: 1; pointer-events: all; }
+  .loader-ring { width: 56px; height: 56px; border-radius: 50%; border: 2px solid rgba(232,96,28,0.2); border-top-color: var(--saffron); animation: spin 0.8s linear infinite; }
+  .loader-text { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; color: var(--cream); opacity: 0.6; font-style: italic; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes floatBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; }
+    .hero { grid-template-columns: 1fr; }
+    .hero-right { display: none; }
+    .hero-left { padding: 60px 24px; }
+    .planner, .promos, .result-section, .destinations, .how, footer { padding: 60px 24px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .promo-grid { grid-template-columns: 1fr; }
+    .dest-grid { grid-template-columns: repeat(2,1fr); }
+    .dest-card:first-child { grid-row: auto; }
+    .steps-grid { grid-template-columns: repeat(2,1fr); }
+    .steps-grid::before { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="loader-overlay" id="loader">
+  <div class="loader-ring"></div>
+  <div class="loader-text">Crafting your journey…</div>
+</div>
+
+<nav>
+  <div class="logo">Ya<span>tra</span></div>
+  <div class="nav-links">
+    <a href="#destinations">Destinations</a>
+    <a href="#promos">Offers</a>
+    <a href="#how">How It Works</a>
+    <button class="btn-nav">Sign In</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-badge">AI-Powered Travel Planning</div>
+    <h1>Discover <em>Incredible</em><br><strong>India</strong>, your way.</h1>
+    <p class="hero-sub">From the Himalayan peaks to Kerala's backwaters — let AI craft a perfectly personalised Indian journey for you in seconds.</p>
+    <div class="hero-stats">
+      <div class="stat-item"><div class="stat-num">28+</div><div class="stat-label">States covered</div></div>
+      <div class="stat-item"><div class="stat-num">500+</div><div class="stat-label">Destinations</div></div>
+      <div class="stat-item"><div class="stat-num">10k+</div><div class="stat-label">Trips planned</div></div>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="float-card">
+      <div class="float-card-title">Top Pick This Week</div>
+      <div class="float-card-dest">Rajasthan Heritage</div>
+      <div class="float-card-meta">Jaipur · Jodhpur · Udaipur</div>
+    </div>
+    <div class="float-card-2">
+      <div class="fc2-label">Avg. Trip Duration</div>
+      <div class="fc2-val">7 Days</div>
+      <div class="fc2-dots">
+        <div class="fc2-dot active"></div><div class="fc2-dot active"></div><div class="fc2-dot active"></div><div class="fc2-dot"></div><div class="fc2-dot"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLANNER -->
+<section class="planner" id="planner">
+  <div class="section-label">✦ Trip Planner</div>
+  <h2>Tell us about<br>your <em>dream trip</em></h2>
+  <div class="form-grid">
+    <div class="form-group">
+      <label class="form-label">Where from?</label>
+      <input class="form-input" type="text" placeholder="Your city / country" id="fromCity">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Destination in India</label>
+      <select class="form-select" id="destination">
+        <option value="">Choose a region or city</option>
+        <optgroup label="North India">
+          <option value="Rajasthan">Rajasthan (Jaipur, Udaipur, Jodhpur)</option>
+          <option value="Delhi">Delhi &amp; Agra</option>
+          <option value="Himachal">Himachal Pradesh</option>
+          <option value="Uttarakhand">Uttarakhand</option>
+          <option value="Kashmir">Kashmir</option>
+        </optgroup>
+        <optgroup label="South India">
+          <option value="Kerala">Kerala Backwaters</option>
+          <option value="Tamil Nadu">Tamil Nadu Temples</option>
+          <option value="Goa">Goa Beaches</option>
+          <option value="Karnataka">Karnataka (Coorg, Hampi)</option>
+        </optgroup>
+        <optgroup label="East India">
+          <option value="Kolkata">Kolkata &amp; Bengal</option>
+          <option value="Odisha">Odisha</option>
+          <option value="Sikkim">Sikkim &amp; North-East</option>
+        </optgroup>
+        <optgroup label="West India">
+          <option value="Mumbai">Mumbai &amp; Maharashtra</option>
+          <option value="Gujarat">Gujarat Heritage</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Duration</label>
+      <select class="form-select" id="duration">
+        <option value="3">3 days</option>
+        <option value="5">5 days</option>
+        <option value="7" selected>7 days</option>
+        <option value="10">10 days</option>
+        <option value="14">14 days</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Travel Dates</label>
+      <input class="form-input" type="date" id="startDate">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Travellers</label>
+      <select class="form-select" id="travellers">
+        <option>Solo</option>
+        <option>Couple</option>
+        <option>Family with kids</option>
+        <option>Group of friends</option>
+        <option>Corporate group</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Budget</label>
+      <select class="form-select" id="budget">
+        <option>Budget (₹2,000–₹4,000/day)</option>
+        <option selected>Mid-range (₹4,000–₹10,000/day)</option>
+        <option>Premium (₹10,000–₹25,000/day)</option>
+        <option>Luxury (₹25,000+/day)</option>
+      </select>
+    </div>
+    <div class="form-group full">
+      <label class="form-label">Travel Interests — pick all that apply</label>
+      <div class="chips-row" id="interestChips">
+        <div class="chip active" data-val="culture">🏛️ Culture &amp; Heritage</div>
+        <div class="chip" data-val="food">🍛 Food &amp; Cuisine</div>
+        <div class="chip" data-val="adventure">🏕️ Adventure &amp; Nature</div>
+        <div class="chip" data-val="spiritual">🪔 Spiritual &amp; Temples</div>
+        <div class="chip" data-val="beach">🏖️ Beaches</div>
+        <div class="chip" data-val="wildlife">🐯 Wildlife &amp; Safari</div>
+        <div class="chip" data-val="wellness">🧘 Wellness &amp; Yoga</div>
+        <div class="chip" data-val="photography">📷 Photography</div>
+        <div class="chip" data-val="shopping">🛍️ Shopping &amp; Crafts</div>
+        <div class="chip" data-val="nightlife">✨ Nightlife &amp; Bars</div>
+      </div>
+    </div>
+    <div class="form-group full">
+      <label class="form-label">Any special requests?</label>
+      <textarea class="form-textarea" id="specialReq" placeholder="E.g. vegetarian food, wheelchair accessibility, prefer non-touristy places, specific festivals…"></textarea>
+    </div>
+  </div>
+  <button class="btn-generate" onclick="generateItinerary()">✦ &nbsp; Generate My India Itinerary</button>
+</section>
+
+<!-- RESULT -->
+<section class="result-section" id="resultSection">
+  <div class="result-header">
+    <div>
+      <div class="section-label">✦ Your Itinerary</div>
+      <h2 id="resultTitle">7 Days in <em>India</em></h2>
+    </div>
+    <div class="result-meta" id="resultMeta"></div>
+  </div>
+  <div class="itinerary-grid" id="itineraryGrid"></div>
+</section>
+
+<!-- PROMO CODES -->
+<section class="promos" id="promos">
+  <div class="section-label">✦ Exclusive Offers</div>
+  <h2>Summer sale — <em>save big</em><br>on your next trip</h2>
+  <div class="promo-grid">
+    <div class="promo-card">
+      <div class="promo-ribbon">LIMITED</div>
+      <div class="promo-badge badge-hot">🔥 Hot Deal</div>
+      <div class="promo-dest">Goa Beaches</div>
+      <div class="promo-desc">Sun, sand and savings! Book a 3-night Goa getaway and get flat 20% off on hotels + complimentary breakfast included.</div>
+      <div class="promo-discount">20% OFF</div>
+      <div class="promo-discount-label">on hotel bookings · min. ₹8,000 order</div>
+      <div class="promo-code-box" onclick="copyCode(this, 'GOASUMMER')">
+        <span class="promo-code-text">GOASUMMER</span>
+        <button class="promo-copy-btn">Copy</button>
+      </div>
+      <div class="promo-validity">Valid 1 May – 30 Jun 2025 · Tap to copy</div>
+    </div>
+    <div class="promo-card">
+      <div class="promo-badge badge-new">✨ New</div>
+      <div class="promo-dest">Kerala Backwaters</div>
+      <div class="promo-desc">Houseboat stays, spice trails, and Ayurvedic retreats. Get ₹3,000 instant cashback on Kerala packages booked this month.</div>
+      <div class="promo-discount">₹3,000</div>
+      <div class="promo-discount-label">instant cashback · min. ₹15,000 order</div>
+      <div class="promo-code-box" onclick="copyCode(this, 'KERALAZEN')">
+        <span class="promo-code-text">KERALAZEN</span>
+        <button class="promo-copy-btn">Copy</button>
+      </div>
+      <div class="promo-validity">Valid 1 May – 31 May 2025 · Tap to copy</div>
+    </div>
+    <div class="promo-card">
+      <div class="promo-badge badge-flash">⚡ Flash Sale</div>
+      <div class="promo-dest">Manali Escape</div>
+      <div class="promo-desc">Beat the summer heat with a Himalayan getaway. Book within 48 hours to unlock 15% off on Manali resort packages.</div>
+      <div class="promo-discount">15% OFF</div>
+      <div class="promo-discount-label">on resort packages · flash deal</div>
+      <div class="promo-code-box" onclick="copyCode(this, 'HIMALAYAS15')">
+        <span class="promo-code-text">HIMALAYAS15</span>
+        <button class="promo-copy-btn">Copy</button>
+      </div>
+      <div class="promo-validity">Ends 10 May 2025 · 48-hour flash deal</div>
+    </div>
+  </div>
+</section>
+
+<!-- DESTINATIONS -->
+<section class="destinations" id="destinations">
+  <div class="dest-header">
+    <div>
+      <div class="section-label">✦ Explore India</div>
+      <h2>Popular <em>destinations</em><br>to discover</h2>
+    </div>
+    <button class="btn-nav" style="flex-shrink:0;">View all →</button>
+  </div>
+  <div class="dest-grid">
+    <div class="dest-card" onclick="quickPlan('Rajasthan')">
+      <div class="dest-img" style="background-image:url('https://images.unsplash.com/photo-1477587458883-47145ed6979e?w=600&q=80')"></div>
+      <div class="dest-overlay"></div>
+      <div class="dest-info"><div class="dest-name">Rajasthan</div><div class="dest-state">The Land of Kings</div></div>
+    </div>
+    <div class="dest-card" onclick="quickPlan('Kerala')">
+      <div class="dest-img" style="background-image:url('https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&q=80')"></div>
+      <div class="dest-overlay"></div>
+      <div class="dest-info"><div class="dest-name">Kerala</div><div class="dest-state">God's Own Country</div></div>
+    </div>
+    <div class="dest-card" onclick="quickPlan('Goa')">
+      <div class="dest-img" style="background-image:url('https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&q=80')"></div>
+      <div class="dest-overlay"></div>
+      <div class="dest-info"><div class="dest-name">Goa</div><div class="dest-state">Sun, Sand &amp; Spice</div></div>
+    </div>
+    <div class="dest-card" onclick="quickPlan('Himachal')">
+      <div class="dest-img" style="background-image:url('https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=80')"></div>
+      <div class="dest-overlay"></div>
+      <div class="dest-info"><div class="dest-name">Himachal</div><div class="dest-state">The Himalayan Escape</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW -->
+<section class="how" id="how">
+  <div class="section-label" style="text-align:center;display:block;margin-bottom:8px;">✦ Process</div>
+  <h2>How <em>Yatra</em> works</h2>
+  <div class="steps-grid">
+    <div class="step"><div class="step-num">1</div><div class="step-icon">📋</div><div class="step-title">Share Your Preferences</div><div class="step-desc">Tell us your destination, dates, interests, and budget.</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-icon">🤖</div><div class="step-title">AI Crafts Your Plan</div><div class="step-desc">Our AI builds a personalised day-by-day itinerary just for you.</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-icon">✏️</div><div class="step-title">Refine &amp; Adjust</div><div class="step-desc">Swap activities, reorder days, or add new stops anytime.</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-icon">✈️</div><div class="step-title">Travel &amp; Enjoy</div><div class="step-desc">Download as PDF, share with friends, and set off!</div></div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">Ya<span>tra</span></div>
+  <p>© 2025 Yatra AI · Built with ♥ for India</p>
+  <div class="footer-links"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a></div>
+</footer>
+
+<script>
+// ── Chip toggling ──
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => c.classList.toggle('active')));
+
+// ── Itinerary data per destination ──
+const itineraries = {
+  Rajasthan: [
+    { day:1, title:"Arrival in Jaipur", subtitle:"The Pink City awaits", activities:[
+      { time:"10:00 AM", name:"Check-in at Heritage Haveli", desc:"Settle into a beautifully restored haveli in the old city walled quarter.", tag:"culture" },
+      { time:"1:00 PM", name:"Lunch at Lassiwala", desc:"Try the iconic thick lassi and local Rajasthani thali at this legendary stall.", tag:"food" },
+      { time:"3:00 PM", name:"City Palace", desc:"Explore the opulent royal residence blending Mughal and Rajput architecture.", tag:"culture" },
+      { time:"6:30 PM", name:"Jantar Mantar at Sunset", desc:"Wander through the UNESCO-listed astronomical observatory at golden hour.", tag:"culture" },
+      { time:"8:30 PM", name:"Rooftop Dinner at Chokhi Dhani", desc:"Folk performances with traditional dal baati churma under the stars.", tag:"food" },
+    ]},
+    { day:2, title:"Amber Fort & Markets", subtitle:"Forts, spices and gems", activities:[
+      { time:"7:00 AM", name:"Elephant Ride to Amber Fort", desc:"Iconic sunrise ascent to the 16th-century hilltop fortress above Maota Lake.", tag:"adventure" },
+      { time:"11:00 AM", name:"Sheesh Mahal", desc:"Thousands of tiny mirrors create a breathtaking dazzling effect inside the Palace.", tag:"culture" },
+      { time:"1:30 PM", name:"Lunch at 1135 AD", desc:"Fine dining with royal Rajasthani recipes inside the fort itself.", tag:"food" },
+      { time:"3:30 PM", name:"Johari Bazaar Shopping", desc:"Hunt for gemstones, blue pottery, and handmade textiles in the bazaar lanes.", tag:"culture" },
+      { time:"7:00 PM", name:"Hawa Mahal Evening View", desc:"The iconic pink facade glows golden against the dusk sky — perfect for photos.", tag:"culture" },
+    ]},
+    { day:3, title:"Drive to Jodhpur", subtitle:"The Blue City journey", activities:[
+      { time:"8:00 AM", name:"Depart Jaipur", desc:"Scenic 5-hour drive through the Aravalli hills and desert landscape.", tag:"adventure" },
+      { time:"1:30 PM", name:"Lunch at On The Rocks", desc:"Garden restaurant at the base of Mehrangarh with stunning fort views.", tag:"food" },
+      { time:"3:00 PM", name:"Mehrangarh Fort", desc:"One of India's largest forts at 400ft — seven gates, artefacts, sweeping blue city panoramas.", tag:"culture" },
+      { time:"6:00 PM", name:"Jaswant Thada at Sunset", desc:"Pristine white marble cenotaph that glows ethereally in the dusk light.", tag:"spiritual" },
+      { time:"8:30 PM", name:"Rooftop Dinner, Old City", desc:"Dinner with a direct view of the illuminated Mehrangarh at night.", tag:"food" },
+    ]},
+    { day:4, title:"Jodhpur Villages", subtitle:"Rural Rajasthan life", activities:[
+      { time:"8:00 AM", name:"Bishnoi Village Safari", desc:"Jeep safari to experience authentic rural life, opium ceremonies, and blackbuck sightings.", tag:"adventure" },
+      { time:"12:00 PM", name:"Clock Tower Spice Market", desc:"Aromatic lanes of Sardar Market — pick up saffron, cardamom, and Rajasthani spice blends.", tag:"food" },
+      { time:"3:00 PM", name:"Rao Jodha Desert Rock Park", desc:"Trek through a restored ecosystem right at the base of Mehrangarh.", tag:"adventure" },
+      { time:"6:30 PM", name:"Sunset at Kaylana Lake", desc:"A peaceful lakeside sunset away from the city crowds.", tag:"wellness" },
+    ]},
+    { day:5, title:"Drive to Udaipur", subtitle:"City of Lakes", activities:[
+      { time:"8:00 AM", name:"Depart Jodhpur", desc:"5-hour scenic drive passing ancient temples and Rajasthani villages.", tag:"adventure" },
+      { time:"2:00 PM", name:"Arrive & Check-in", desc:"Check into a lakeside hotel with views of Lake Pichola.", tag:"culture" },
+      { time:"4:00 PM", name:"Boat Ride on Lake Pichola", desc:"Golden-hour boat ride past the shimmering Lake Palace and Jag Mandir island.", tag:"adventure" },
+      { time:"8:00 PM", name:"Dinner at Ambrai Ghat", desc:"Lakeside dining with iconic views of the Taj Lake Palace glowing in the water.", tag:"food" },
+    ]},
+    { day:6, title:"Udaipur Palaces", subtitle:"Royal grandeur on the water", activities:[
+      { time:"9:00 AM", name:"City Palace Complex", desc:"The grandest palace in Rajasthan — crystal galleries, arched terraces, royal artefacts.", tag:"culture" },
+      { time:"1:00 PM", name:"Lunch at Whistling Teal", desc:"Organic, locally-sourced Rajasthani cuisine in a serene garden setting.", tag:"food" },
+      { time:"3:00 PM", name:"Sajjangarh Monsoon Palace", desc:"Hilltop palace offering 360° panoramic views over Udaipur at golden hour.", tag:"adventure" },
+      { time:"7:30 PM", name:"Bagore Ki Haveli Cultural Show", desc:"Spectacular evening of traditional Rajasthani dance, music, and puppetry.", tag:"spiritual" },
+    ]},
+    { day:7, title:"Departure Day", subtitle:"Last memories of Rajasthan", activities:[
+      { time:"8:00 AM", name:"Morning at Fateh Sagar Lake", desc:"Peaceful morning walk by the lake — watch locals start their day.", tag:"wellness" },
+      { time:"10:00 AM", name:"Shilpgram Craft Village", desc:"Browse stunning handmade textiles, jewellery, and miniature paintings by local artisans.", tag:"culture" },
+      { time:"1:00 PM", name:"Farewell Thali Lunch", desc:"A grand traditional Rajasthani thali to end your royal journey on a high note.", tag:"food" },
+      { time:"3:00 PM", name:"Depart for Airport", desc:"Transfer to Udaipur airport or onward train — memories packed, hearts full.", tag:"adventure" },
+    ]},
+  ],
+  Kerala: [
+    { day:1, title:"Arrive in Kochi", subtitle:"Gateway to God's Own Country", activities:[
+      { time:"11:00 AM", name:"Check-in at Fort Kochi", desc:"Stay in a charming Portuguese-era heritage guesthouse in the old Fort Kochi quarter.", tag:"culture" },
+      { time:"2:00 PM", name:"Chinese Fishing Nets", desc:"Watch the iconic cantilevered fishing nets being operated by local fishermen at the waterfront.", tag:"culture" },
+      { time:"4:00 PM", name:"Mattancherry & Jew Town", desc:"Explore the spice warehouses, antique shops, and the 400-year-old Paradesi Synagogue.", tag:"culture" },
+      { time:"7:30 PM", name:"Kathakali Performance", desc:"Witness Kerala's stunning classical dance-drama with elaborate costumes and facial expressions.", tag:"spiritual" },
+    ]},
+    { day:2, title:"Munnar Tea Hills", subtitle:"Mist, tea, and mountain air", activities:[
+      { time:"7:00 AM", name:"Drive to Munnar", desc:"Scenic 4-hour drive through rubber plantations and winding mountain roads.", tag:"adventure" },
+      { time:"12:00 PM", name:"Tea Museum", desc:"Learn the art of tea-making from plucking to processing at the KDHP Tea Museum.", tag:"culture" },
+      { time:"2:30 PM", name:"Tea Plantation Walk", desc:"Walk through endless rolling green tea terraces in the cool mountain air.", tag:"wellness" },
+      { time:"6:00 PM", name:"Sunset at Top Station", desc:"Breathtaking views of the Western Ghats from one of Kerala's highest viewpoints.", tag:"adventure" },
+      { time:"8:00 PM", name:"Dinner at Saravana Bhavan", desc:"Piping hot Kerala meals — appam with stew and fish curry.", tag:"food" },
+    ]},
+    { day:3, title:"Alleppey Backwaters", subtitle:"Life on the water", activities:[
+      { time:"9:00 AM", name:"Drive to Alleppey", desc:"3-hour drive through lush paddy fields and coconut groves.", tag:"adventure" },
+      { time:"12:00 PM", name:"Board Your Houseboat", desc:"Step onto your private Kerala kettuvallam — your floating home for the night.", tag:"wellness" },
+      { time:"2:00 PM", name:"Backwater Cruise", desc:"Glide through narrow canals, watch village life unfold on the banks, spot kingfishers and egrets.", tag:"adventure" },
+      { time:"5:00 PM", name:"Sunset on Vembanad Lake", desc:"Watch the sun melt into Asia's longest lake from the deck of your houseboat.", tag:"adventure" },
+      { time:"7:30 PM", name:"Chef's Kerala Dinner", desc:"Freshly caught karimeen fish, prawn curry, and Kerala rice served on a banana leaf.", tag:"food" },
+    ]},
+    { day:4, title:"Kumarakom Bird Sanctuary", subtitle:"Nature's morning chorus", activities:[
+      { time:"6:00 AM", name:"Early Morning Birdwatching", desc:"Spot rare Siberian storks, herons, and kingfishers in the Kumarakom bird sanctuary.", tag:"adventure" },
+      { time:"9:00 AM", name:"Ayurvedic Breakfast & Massage", desc:"Start the day with herbal tea and a traditional Panchakarma oil massage at the resort.", tag:"wellness" },
+      { time:"12:00 PM", name:"Village Canoe Ride", desc:"Paddle through tiny village canals inaccessible to larger boats — truly off the beaten path.", tag:"adventure" },
+      { time:"3:00 PM", name:"Drive to Kovalam Beach", desc:"Head south to Kerala's most famous crescent-shaped beach resort town.", tag:"beach" },
+    ]},
+    { day:5, title:"Kovalam Beach", subtitle:"Sand, surf and seafood", activities:[
+      { time:"7:00 AM", name:"Sunrise at Lighthouse Beach", desc:"Watch the Arabian Sea come alive at dawn from below the red-and-white striped lighthouse.", tag:"beach" },
+      { time:"10:00 AM", name:"Surfing Lesson", desc:"First-timer surfing session with local instructors on the gentle waves of Kovalam.", tag:"adventure" },
+      { time:"1:00 PM", name:"Seafood Lunch at Rockholm", desc:"Grilled prawns, lobster, and kingfish with a view of the crashing waves.", tag:"food" },
+      { time:"4:00 PM", name:"Vizhinjam Rock Cave Temple", desc:"Ancient 8th-century rock-cut cave temple with beautiful bas-relief carvings.", tag:"spiritual" },
+      { time:"7:30 PM", name:"Beach Bonfire Dinner", desc:"Fresh-catch BBQ on the beach with live music from local musicians.", tag:"food" },
+    ]},
+    { day:6, title:"Thiruvananthapuram", subtitle:"Culture of the capital", activities:[
+      { time:"9:00 AM", name:"Padmanabhaswamy Temple", desc:"One of the wealthiest and most sacred Vishnu temples in India — stunning Dravidian architecture.", tag:"spiritual" },
+      { time:"11:30 AM", name:"Napier Museum", desc:"An extraordinary Indo-Saracenic building housing Kerala bronzes, ivory carvings, and temple chariots.", tag:"culture" },
+      { time:"2:00 PM", name:"Chalai Bazaar", desc:"Kerala's oldest market — a riot of spices, traditional textiles, and street food.", tag:"food" },
+      { time:"5:00 PM", name:"Varkala Cliff Sunset", desc:"Drive to the dramatic red laterite cliffs of Varkala for a stunning Arabian Sea sunset.", tag:"beach" },
+    ]},
+    { day:7, title:"Departure from Kochi", subtitle:"Until next time, Kerala", activities:[
+      { time:"8:00 AM", name:"Morning Yoga by the Sea", desc:"A calming beach yoga session to soothe your body before the journey home.", tag:"wellness" },
+      { time:"10:00 AM", name:"Spice Garden Visit", desc:"Tour a working spice garden — see cardamom, pepper, nutmeg, and cinnamon growing wild.", tag:"culture" },
+      { time:"1:00 PM", name:"Final Kerala Sadya", desc:"A farewell feast of 26 dishes served on a banana leaf — the ultimate Kerala experience.", tag:"food" },
+      { time:"3:00 PM", name:"Transfer to Airport", desc:"Drive to Kochi International Airport for your onward journey.", tag:"adventure" },
+    ]},
+  ],
+  Goa: [
+    { day:1, title:"Arrive in Goa", subtitle:"Sun, sand and sangria", activities:[
+      { time:"12:00 PM", name:"Check-in at Beach Resort", desc:"Drop your bags at a beachside resort in North Goa and feel the sea breeze.", tag:"beach" },
+      { time:"2:00 PM", name:"Baga Beach", desc:"First taste of Goa's famous shack culture — cold kingfisher, fresh fish, white sand.", tag:"beach" },
+      { time:"5:00 PM", name:"Calangute Sunset Walk", desc:"Stroll along the golden shore as the sky turns crimson over the Arabian Sea.", tag:"beach" },
+      { time:"8:00 PM", name:"Dinner at Tito's Lane", desc:"Fresh prawn balchão and bebinca dessert at one of Goa's oldest beach restaurants.", tag:"food" },
+    ]},
+    { day:2, title:"North Goa Heritage", subtitle:"Forts and Portuguese lanes", activities:[
+      { time:"9:00 AM", name:"Aguada Fort", desc:"16th-century Portuguese sea fort with sweeping views over the confluence of the Mandovi river.", tag:"culture" },
+      { time:"11:00 AM", name:"Fontainhas Latin Quarter", desc:"Wander Goa's prettiest neighbourhood — pastel Portuguese houses, art galleries, bakeries.", tag:"culture" },
+      { time:"1:30 PM", name:"Lunch at Viva Panjim", desc:"Hidden gem serving authentic Goan fish curry rice, sorpotel, and prawn rissois.", tag:"food" },
+      { time:"4:00 PM", name:"Anjuna Flea Market", desc:"Browse handmade jewellery, tie-dye clothes, and hippie-era artifacts at this iconic market.", tag:"culture" },
+      { time:"8:00 PM", name:"Sunset Cruise on Mandovi", desc:"Two-hour river cruise with live Konkani music and Goan snacks as the sky blazes.", tag:"adventure" },
+    ]},
+    { day:3, title:"South Goa Escape", subtitle:"Quiet beaches and spice trails", activities:[
+      { time:"9:00 AM", name:"Spice Plantation Tour", desc:"Guided walk through a working spice farm — taste fresh pepper, cardamom, vanilla, and more.", tag:"culture" },
+      { time:"12:30 PM", name:"Palolem Beach", desc:"South Goa's most beautiful crescent beach — calm waters, swaying palms, bohemian shacks.", tag:"beach" },
+      { time:"3:00 PM", name:"Kayaking in Agonda", desc:"Paddle through mangrove-lined creeks and spot dolphins in the bay.", tag:"adventure" },
+      { time:"7:00 PM", name:"Silent Noise Party", desc:"Palolem's famous headphone disco on the beach — dancing under the stars to three DJs.", tag:"adventure" },
+    ]},
+  ],
+  Himachal: [
+    { day:1, title:"Arrive in Manali", subtitle:"Into the mountains", activities:[
+      { time:"11:00 AM", name:"Check-in at Mountain Lodge", desc:"Settle into a cosy pine-wood cottage with views of the Beas river valley.", tag:"adventure" },
+      { time:"2:00 PM", name:"Hadimba Temple", desc:"Ancient wooden temple in a cedar forest, dedicated to the goddess Hadimba — spiritual and serene.", tag:"spiritual" },
+      { time:"4:30 PM", name:"Old Manali Walk", desc:"Stroll through the hippie village lanes, browse Tibetan thangka paintings and yak wool sweaters.", tag:"culture" },
+      { time:"8:00 PM", name:"Dinner at Johnson's Café", desc:"Warm trout, pasta and apple crumble by a crackling fireplace — a Manali classic.", tag:"food" },
+    ]},
+    { day:2, title:"Rohtang Pass Adventure", subtitle:"Snow at 13,000 feet", activities:[
+      { time:"6:00 AM", name:"Early Departure for Rohtang", desc:"Beat the crowds with an early start up the mountain pass road.", tag:"adventure" },
+      { time:"9:00 AM", name:"Snow Activities at Rohtang", desc:"Skiing, snowboarding, and sledging on pristine Himalayan snow at 13,051 feet.", tag:"adventure" },
+      { time:"1:00 PM", name:"Solang Valley", desc:"River rafting, zorbing, and paragliding in the lush green valley on the way back.", tag:"adventure" },
+      { time:"4:00 PM", name:"Hot Springs at Vashisht", desc:"Soak tired muscles in the ancient sulphur hot spring baths of Vashisht village.", tag:"wellness" },
+      { time:"7:30 PM", name:"Thukpa Dinner", desc:"A warm bowl of Tibetan noodle soup and momos at a cosy Tibetan kitchen.", tag:"food" },
+    ]},
+    { day:3, title:"Spiti Valley Day Trip", subtitle:"The cold desert", activities:[
+      { time:"7:00 AM", name:"Drive toward Spiti", desc:"One of the world's highest motorable roads — raw, dramatic Himalayan moonscapes.", tag:"adventure" },
+      { time:"11:00 AM", name:"Key Monastery", desc:"A 1000-year-old Tibetan Buddhist monastery perched dramatically on a hilltop at 13,668 ft.", tag:"spiritual" },
+      { time:"2:00 PM", name:"Chicham Bridge", desc:"Asia's highest bridge suspended over a deep Spiti gorge — breathtaking and terrifying.", tag:"adventure" },
+      { time:"5:00 PM", name:"Stargazing Camp", desc:"With near-zero light pollution, Spiti offers some of the world's clearest night skies.", tag:"adventure" },
+    ]},
+  ],
+  Delhi: [
+    { day:1, title:"Old Delhi Immersion", subtitle:"Timeless chaos and culture", activities:[
+      { time:"9:00 AM", name:"Jama Masjid", desc:"India's largest mosque — climb the minaret for sweeping views over old Delhi's rooftops.", tag:"spiritual" },
+      { time:"11:00 AM", name:"Rickshaw Ride through Chandni Chowk", desc:"A sensory explosion through one of the world's oldest and busiest markets.", tag:"culture" },
+      { time:"1:30 PM", name:"Paranthe Wali Gali", desc:"Famous alley serving 20+ varieties of stuffed paranthas since the 1870s.", tag:"food" },
+      { time:"3:30 PM", name:"Red Fort", desc:"The Mughal emperor Shah Jahan's magnificent red sandstone fortress by the Yamuna.", tag:"culture" },
+      { time:"7:00 PM", name:"Son et Lumière at Red Fort", desc:"Spectacular sound and light show narrating 5000 years of Delhi's history.", tag:"culture" },
+    ]},
+    { day:2, title:"New Delhi & Agra", subtitle:"Taj Mahal day trip", activities:[
+      { time:"5:30 AM", name:"Train to Agra", desc:"Catch the Gatimaan Express — India's fastest train — and arrive in 100 minutes.", tag:"adventure" },
+      { time:"8:00 AM", name:"Taj Mahal at Sunrise", desc:"The world's most beautiful building glows pink, then gold, then white in the morning light.", tag:"culture" },
+      { time:"11:00 AM", name:"Agra Fort", desc:"The mighty red sandstone fort from where Shah Jahan could see the Taj — his prison.", tag:"culture" },
+      { time:"2:00 PM", name:"Lunch at Pind Balluchi", desc:"Award-winning Mughlai cuisine — biryani, kebabs, and Agra's famous petha dessert.", tag:"food" },
+      { time:"5:00 PM", name:"Return to Delhi", desc:"Evening train back to the capital.", tag:"adventure" },
+    ]},
+  ],
+  Kashmir: [
+    { day:1, title:"Arrive in Srinagar", subtitle:"Paradise on Earth", activities:[
+      { time:"11:00 AM", name:"Check-in at Dal Lake Houseboat", desc:"Your floating wooden palace on the world-famous Dal Lake — a bucket-list experience.", tag:"culture" },
+      { time:"2:00 PM", name:"Shikara Ride on Dal Lake", desc:"Glide past floating gardens, lotus beds, and the mirrored Himalayan reflections.", tag:"adventure" },
+      { time:"5:00 PM", name:"Mughal Gardens", desc:"Shalimar Bagh and Nishat Bagh — terraced Persian gardens cascading down to the lake.", tag:"culture" },
+      { time:"8:00 PM", name:"Wazwan Feast", desc:"36-course Kashmiri royal feast — rogan josh, gushtaba, and kahwa tea on the houseboat deck.", tag:"food" },
+    ]},
+    { day:2, title:"Gulmarg Snow", subtitle:"Asia's best ski resort", activities:[
+      { time:"8:00 AM", name:"Drive to Gulmarg", desc:"Scenic 1.5-hour drive through saffron fields and apple orchards.", tag:"adventure" },
+      { time:"10:00 AM", name:"Gondola Cable Car", desc:"World's highest cable car ride to 13,780 ft — Himalayan panoramas in every direction.", tag:"adventure" },
+      { time:"12:00 PM", name:"Snow Activities", desc:"Skiing, snowboarding, and snow trekking on pristine Himalayan slopes.", tag:"adventure" },
+      { time:"3:00 PM", name:"Strawberry Fields", desc:"Pick fresh Kashmiri strawberries straight from the mountain meadow fields.", tag:"food" },
+      { time:"8:00 PM", name:"Kehwa and Fireside Stories", desc:"Return to your houseboat for spiced Kashmiri tea and stories with your host family.", tag:"wellness" },
+    ]},
+  ],
+};
+
+// Fallback for destinations without detailed data
+const genericDay = (dest, n) => ({
+  day: n, title: `Day ${n} in ${dest}`, subtitle: "Explore and discover",
+  activities: [
+    { time:"9:00 AM", name:"Morning Exploration", desc:`Start your day exploring the highlights of ${dest}.`, tag:"culture" },
+    { time:"1:00 PM", name:"Local Cuisine Lunch", desc:"Taste the authentic regional flavours at a recommended local restaurant.", tag:"food" },
+    { time:"3:00 PM", name:"Afternoon Activity", desc:"Visit key landmarks, markets, or natural attractions in the area.", tag:"adventure" },
+    { time:"7:30 PM", name:"Evening at Leisure", desc:"Relax, explore the local nightlife, or catch a cultural performance.", tag:"culture" },
+  ]
+});
+
+function getItinerary(destKey, days) {
+  const base = itineraries[destKey] || [];
+  const result = [];
+  for (let i = 0; i < days; i++) {
+    result.push(base[i] || genericDay(destKey, i + 1));
+  }
+  return result;
+}
+
+function quickPlan(dest) {
+  const sel = document.getElementById('destination');
+  for (let o of sel.options) {
+    if (o.value === dest) { sel.value = dest; break; }
+  }
+  document.getElementById('planner').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function generateItinerary() {
+  const destVal = document.getElementById('destination').value;
+  if (!destVal) { alert('Please select a destination first!'); return; }
+  const days = parseInt(document.getElementById('duration').value) || 7;
+  const travellers = document.getElementById('travellers').value;
+  const budget = document.getElementById('budget').value;
+
+  document.getElementById('loader').classList.add('active');
+  await new Promise(r => setTimeout(r, 2000));
+  document.getElementById('loader').classList.remove('active');
+
+  const itinerary = getItinerary(destVal, days);
+  renderItinerary(itinerary, destVal, days, travellers, budget);
+  document.getElementById('resultSection').classList.add('visible');
+  document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderItinerary(itinerary, dest, days, travellers, budget) {
+  document.getElementById('resultTitle').innerHTML = `${days} Days in <em>${dest}</em>`;
+  document.getElementById('resultMeta').innerHTML = `
+    <div class="meta-pill">🗓️ <span>${days} Nights</span></div>
+    <div class="meta-pill">👥 <span>${travellers}</span></div>
+    <div class="meta-pill">💰 <span>${budget.split(' ')[0]}</span></div>
+  `;
+  document.getElementById('itineraryGrid').innerHTML = itinerary.map((day, i) => `
+    <div class="day-card ${i === 0 ? 'open' : ''}" onclick="toggleDay(this)">
+      <div class="day-header">
+        <div class="day-num">${day.day}</div>
+        <div>
+          <div class="day-title">${day.title}</div>
+          <div class="day-subtitle">${day.subtitle}</div>
+        </div>
+        <div class="day-toggle">▾</div>
+      </div>
+      <div class="day-body">
+        <div class="activity-list">
+          ${day.activities.map(a => `
+            <div class="activity-item">
+              <div class="activity-time">${a.time}</div>
+              <div class="activity-content">
+                <div class="activity-name">${a.name}</div>
+                <div class="activity-desc">${a.desc}</div>
+                <div class="activity-tag tag-${a.tag}">${a.tag}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleDay(card) { card.classList.toggle('open'); }
+
+// ── Copy promo code ──
+function copyCode(box, code) {
+  navigator.clipboard.writeText(code).catch(() => {});
+  const btn = box.querySelector('.promo-copy-btn');
+  btn.textContent = '✓ Copied!';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2500);
+}
+
+// ── Scroll reveal ──
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.step, .dest-card, .promo-card').forEach(el => {
+  el.style.opacity='0'; el.style.transform='translateY(30px)';
+  el.style.transition='opacity 0.5s ease, transform 0.5s ease';
+  obs.observe(el);
+});
+</script>
+</body>
+</html>
